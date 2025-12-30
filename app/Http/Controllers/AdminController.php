@@ -34,10 +34,43 @@ class AdminController extends Controller
      */
     public function login(Request $request)
     {
-        // Simple hardcoded admin login (bisa diganti dengan database nanti)
-        if ($request->username == 'admin' && $request->password == 'admin123') {
-            session(['admin_logged_in' => true, 'admin_name' => 'Administrator']);
-            return redirect()->route('admin.dashboard');
+        $request->validate([
+            'username' => 'required',
+            'password' => 'required'
+        ]);
+
+        // Check admin login
+        $admin = \App\Models\Admin::where('username', $request->username)
+            ->where('is_active', true)
+            ->first();
+
+        if ($admin && \Hash::check($request->password, $admin->password)) {
+            // Set session using put method
+            $request->session()->put('admin_id', $admin->id);
+            $request->session()->put('admin_name', $admin->name);
+            $request->session()->put('admin_role', $admin->role);
+
+            // Redirect based on role
+            if ($admin->role === 'super_admin') {
+                return redirect()->route('super-admin.dashboard');
+            } else {
+                return redirect()->route('admin.dashboard');
+            }
+        }
+
+        // Check teacher login (by username or email)
+        $teacher = \App\Models\Teacher::where(function($query) use ($request) {
+                $query->where('username', $request->username)
+                      ->orWhere('email', $request->username);
+            })
+            ->where('is_active', true)
+            ->where('status', 'approved') // Only approved teachers can login
+            ->first();
+
+        if ($teacher && \Hash::check($request->password, $teacher->password)) {
+            $request->session()->put('teacher_id', $teacher->id);
+            $request->session()->put('teacher_name', $teacher->name);
+            return redirect()->route('teacher.dashboard');
         }
         
         return back()->with('error', 'Username atau password salah!');
@@ -79,13 +112,26 @@ class AdminController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'subject' => 'required|string',
+            'grade_level' => 'required|string',
             'category' => 'nullable|string',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'template_id' => 'nullable|exists:game_templates,id',
             'order' => 'nullable|integer',
         ]);
 
         $data = $request->all();
         $data['slug'] = Str::slug($request->title);
+        
+        // Auto-set created_by_teacher_id if logged in as teacher
+        if (session('teacher_id')) {
+            $data['created_by_teacher_id'] = session('teacher_id');
+        }
+        
+        // Set use_template flag if template is selected
+        if ($request->filled('template_id')) {
+            $data['use_template'] = true;
+        }
         
         // Handle thumbnail upload
         if ($request->hasFile('thumbnail')) {
@@ -234,10 +280,44 @@ class AdminController extends Controller
     /**
      * Store new question
      */
-    public function storeQuestion(Request $request)
+    public function storeQuestion(Request $request, $gameId)
     {
+        $game = Game::findOrFail($gameId);
+        
+        // Check if this is a template-based game
+        if ($game->use_template) {
+            // Store as GameQuestion
+            $request->validate([
+                'question_text' => 'required|string',
+                'answer_text' => 'required|string',
+                'points' => 'required|integer|min:1',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+
+            $data = [
+                'game_id' => $gameId,
+                'question_text' => $request->question_text,
+                'answer_text' => $request->answer_text,
+                'points' => $request->points,
+                'order' => \App\Models\GameQuestion::where('game_id', $gameId)->max('order') + 1,
+            ];
+            
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                $imageName = time() . '_' . $image->getClientOriginalName();
+                $image->move(public_path('images/questions'), $imageName);
+                $data['image_path'] = 'images/questions/' . $imageName;
+            }
+
+            \App\Models\GameQuestion::create($data);
+
+            return redirect()->route('admin.games.edit', $gameId)
+                ->with('success', 'Soal berhasil ditambahkan!');
+        }
+        
+        // Old system - store as Question
         $request->validate([
-            'game_id' => 'required|exists:games,id',
             'question_text' => 'required|string',
             'correct_answer' => 'required|string',
             'points' => 'nullable|integer|min:1',
@@ -246,6 +326,7 @@ class AdminController extends Controller
         ]);
 
         $data = $request->all();
+        $data['game_id'] = $gameId;
         
         // Handle image upload
         if ($request->hasFile('image')) {
@@ -267,7 +348,7 @@ class AdminController extends Controller
 
         Question::create($data);
 
-        return redirect()->route('admin.questions', $request->game_id)
+        return redirect()->route('admin.questions', $gameId)
             ->with('success', 'Soal berhasil ditambahkan!');
     }
 
@@ -325,23 +406,40 @@ class AdminController extends Controller
     }
 
     /**
-     * Delete question
-     */
-    public function deleteQuestion($id)
-    {
-        $question = Question::findOrFail($id);
-        $gameId = $question->game_id;
+ * Delete question
+ */
+public function deleteQuestion($id)
+{
+    // Try to find as GameQuestion first
+    $gameQuestion = \App\Models\GameQuestion::find($id);
+    if ($gameQuestion) {
+        $gameId = $gameQuestion->game_id;
         
         // Delete image if exists
-        if ($question->image && file_exists(public_path($question->image))) {
-            unlink(public_path($question->image));
+        if ($gameQuestion->image_path && file_exists(public_path($gameQuestion->image_path))) {
+            unlink(public_path(str_replace('images/questions/', 'images/questions/', $gameQuestion->image_path)));
         }
         
-        $question->delete();
+        $gameQuestion->delete();
 
-        return redirect()->route('admin.questions', $gameId)
+        return redirect()->route('admin.games.edit', $gameId)
             ->with('success', 'Soal berhasil dihapus!');
     }
+    
+    // Otherwise, it's an old Question model
+    $question = Question::findOrFail($id);
+    $gameId = $question->game_id;
+    
+    // Delete image if exists
+    if ($question->image && file_exists(public_path($question->image))) {
+        unlink(public_path($question->image));
+    }
+    
+    $question->delete();
+
+    return redirect()->route('admin.questions', $gameId)
+        ->with('success', 'Soal berhasil dihapus!');
+}
 
     // ==================== PARENTS MANAGEMENT ====================
 

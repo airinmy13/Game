@@ -19,7 +19,21 @@ class GameController extends Controller
             return redirect()->route('home')->with('error', 'Silakan login terlebih dahulu');
         }
 
+        // Get student's grade level
+        $student = \App\Models\Student::find(session('student_id'));
+        $studentGrade = $student->grade ?? null;
+
+        // Filter games: show games for student's grade OR 'Semua Kelas'
         $games = Game::where('is_active', true)
+            ->where(function($query) use ($studentGrade) {
+                if ($studentGrade) {
+                    $query->where('grade_level', $studentGrade)
+                          ->orWhere('grade_level', 'Semua Kelas');
+                } else {
+                    // If no grade set, show all games
+                    $query->whereNotNull('grade_level');
+                }
+            })
             ->orderBy('order', 'asc')
             ->get();
 
@@ -35,7 +49,21 @@ class GameController extends Controller
             return redirect()->route('home')->with('error', 'Silakan login terlebih dahulu');
         }
 
+        // Get student's grade level
+        $student = \App\Models\Student::find(session('student_id'));
+        $studentGrade = $student->grade ?? null;
+
+        // Filter games: show games for student's grade OR 'Semua Kelas'
         $games = Game::where('is_active', true)
+            ->where(function($query) use ($studentGrade) {
+                if ($studentGrade) {
+                    $query->where('grade_level', $studentGrade)
+                          ->orWhere('grade_level', 'Semua Kelas');
+                } else {
+                    // If no grade set, show all games
+                    $query->whereNotNull('grade_level');
+                }
+            })
             ->orderBy('order', 'asc')
             ->get();
 
@@ -99,12 +127,21 @@ class GameController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        // Check if game has custom template
+        // Check if game has custom template (old system)
         if ($session->game->custom_template) {
             return view('game.custom', compact('session'));
         }
 
-        // Get random question that hasn't been answered in this session
+        // Check if game uses template system (new system)
+        if ($session->game->use_template && $session->game->template) {
+            $game = $session->game;
+            $questions = $game->gameQuestions;
+            
+            // Render template-based game
+            return view($game->template->template_file, compact('game', 'questions', 'session'));
+        }
+
+        // Standard question-based game
         $answeredQuestionIds = Score::where('game_session_id', $sessionId)
             ->pluck('question_id')
             ->toArray();

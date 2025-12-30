@@ -39,7 +39,11 @@
     <div class="navbar">
         <h1>🎮 Kelola Game</h1>
         <div>
-            <a href="<?php echo e(route('admin.dashboard')); ?>">Dashboard</a>
+            <?php if(session('teacher_id')): ?>
+                <a href="<?php echo e(route('teacher.dashboard')); ?>">Dashboard</a>
+            <?php else: ?>
+                <a href="<?php echo e(route('admin.dashboard')); ?>">Dashboard</a>
+            <?php endif; ?>
             <a href="<?php echo e(route('admin.logout')); ?>">Logout</a>
         </div>
     </div>
@@ -80,19 +84,13 @@
                                 <?php echo e(Str::limit($game->description, 100)); ?>
 
                             </p>
-                            <?php if(!$game->custom_template): ?>
-                                <div style="color: #999; font-size: 12px; margin-bottom: 15px;">
-                                    📝 <?php echo e($game->questions->count()); ?> soal
-                                </div>
-                            <?php else: ?>
+                            <?php if($game->custom_template): ?>
                                 <div style="color: #999; font-size: 12px; margin-bottom: 15px;">
                                     🎨 Custom Template Game
                                 </div>
                             <?php endif; ?>
                             <div class="game-actions">
-                                <?php if(!$game->custom_template): ?>
-                                    <a href="<?php echo e(route('admin.questions', $game->id)); ?>" class="btn btn-success btn-sm">Kelola Soal</a>
-                                <?php endif; ?>
+                                <a href="<?php echo e(route('admin.questions', $game->id)); ?>" class="btn btn-primary btn-sm">📝 Kelola Soal</a>
                                 <a href="<?php echo e(route('admin.games.edit', $game->id)); ?>" class="btn btn-warning btn-sm">Edit</a>
                                 <form action="<?php echo e(route('admin.games.delete', $game->id)); ?>" method="POST" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus game ini?')">
                                     <?php echo csrf_field(); ?>

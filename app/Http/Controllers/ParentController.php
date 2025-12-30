@@ -58,6 +58,16 @@ class ParentController extends Controller
         // Get all children of this parent
         $students = $parent->students;
 
+        // Get schedules for all children
+        $allSchedules = [];
+        foreach ($students as $student) {
+            $schedules = \App\Models\Schedule::where('student_id', $student->id)
+                ->orderBy('schedule_date')
+                ->orderBy('start_time')
+                ->get();
+            $allSchedules[$student->id] = $schedules;
+        }
+
         // Get game sessions for all children
         $allSessions = [];
         $totalGamesPlayed = 0;
@@ -86,6 +96,7 @@ class ParentController extends Controller
         return view('parent.dashboard', compact(
             'parent',
             'students',
+            'allSchedules',
             'allSessions',
             'totalGamesPlayed',
             'totalScore',

@@ -39,7 +39,11 @@
     <div class="navbar">
         <h1>🎮 Kelola Game</h1>
         <div>
-            <a href="{{ route('admin.dashboard') }}">Dashboard</a>
+            @if(session('teacher_id'))
+                <a href="{{ route('teacher.dashboard') }}">Dashboard</a>
+            @else
+                <a href="{{ route('admin.dashboard') }}">Dashboard</a>
+            @endif
             <a href="{{ route('admin.logout') }}">Logout</a>
         </div>
     </div>
@@ -84,6 +88,7 @@
                                 </div>
                             @endif
                             <div class="game-actions">
+                                <a href="{{ route('admin.questions', $game->id) }}" class="btn btn-primary btn-sm">📝 Kelola Soal</a>
                                 <a href="{{ route('admin.games.edit', $game->id) }}" class="btn btn-warning btn-sm">Edit</a>
                                 <form action="{{ route('admin.games.delete', $game->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus game ini?')">
                                     @csrf

@@ -31,7 +31,11 @@
         <h1>➕ Tambah Game Baru</h1>
         <div>
             <a href="{{ route('admin.games') }}">Kembali</a>
-            <a href="{{ route('admin.dashboard') }}">Dashboard</a>
+            @if(session('teacher_id'))
+                <a href="{{ route('teacher.dashboard') }}">Dashboard</a>
+            @else
+                <a href="{{ route('admin.dashboard') }}">Dashboard</a>
+            @endif
         </div>
     </div>
 
@@ -51,8 +55,42 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="subject">Mata Pelajaran *</label>
+                    <select id="subject" name="subject" required>
+                        <option value="">-- Pilih Mata Pelajaran --</option>
+                        <option value="Matematika">Matematika</option>
+                        <option value="Bahasa Indonesia">Bahasa Indonesia</option>
+                        <option value="Bahasa Inggris">Bahasa Inggris</option>
+                        <option value="Bahasa Arab">Bahasa Arab</option>
+                        <option value="IPA (Sains)">IPA (Sains)</option>
+                        <option value="IPS (Sosial)">IPS (Sosial)</option>
+                        <option value="Agama Islam">Agama Islam</option>
+                        <option value="Seni & Budaya">Seni & Budaya</option>
+                        <option value="Olahraga">Olahraga</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="grade_level">Untuk Kelas *</label>
+                    <select id="grade_level" name="grade_level" required>
+                        <option value="">-- Pilih Kelas --</option>
+                        <option value="Semua Kelas">Semua Kelas (Bahasa/Umum)</option>
+                        <option value="Kelas 1">Kelas 1</option>
+                        <option value="Kelas 2">Kelas 2</option>
+                        <option value="Kelas 3">Kelas 3</option>
+                        <option value="Kelas 4">Kelas 4</option>
+                        <option value="Kelas 5">Kelas 5</option>
+                        <option value="Kelas 6">Kelas 6</option>
+                        <option value="SMP">SMP</option>
+                        <option value="SMA">SMA</option>
+                    </select>
+                    <small style="color: #666; display: block; margin-top: 5px;">Pilih "Semua Kelas" untuk game bahasa atau game yang bisa dimainkan semua tingkat</small>
+                </div>
+
+                <div class="form-group">
                     <label for="category">Kategori</label>
-                    <input type="text" id="category" name="category" placeholder="Contoh: Bahasa, Matematika, dll">
+                    <input type="text" id="category" name="category" placeholder="Contoh: Kosakata, Tata Bahasa, dll">
                 </div>
 
                 <div class="form-group">
@@ -63,10 +101,47 @@
 
                 <hr style="margin: 30px 0; border: none; border-top: 2px solid #e0e0e0;">
                 
-                <h3 style="color: #667eea; margin-bottom: 15px;">🎨 Custom Game Template (Opsional)</h3>
-                <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
-                    Masukkan kode HTML lengkap dengan CSS dan JavaScript untuk custom game template. Kode ini akan dirender sebagai halaman game.
-                </p>
+                <h3 style="color: #667eea; margin-bottom: 15px;">🎮 Pilih Cara Membuat Game</h3>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="radio" name="game_mode" value="template" checked onchange="toggleGameMode()">
+                        <strong>Gunakan Template</strong> (Mudah - Isi form saja, tanpa coding)
+                    </label>
+                    <br>
+                    <label style="margin-top: 10px;">
+                        <input type="radio" name="game_mode" value="custom" onchange="toggleGameMode()">
+                        <strong>Custom Code</strong> (Advanced - Tulis HTML/CSS/JS sendiri)
+                    </label>
+                </div>
+
+                <div id="template-section">
+                    <div class="form-group">
+                        <label for="template_id">Pilih Template Game</label>
+                        <select id="template_id" name="template_id">
+                            <option value="">-- Pilih Template --</option>
+                            @foreach(\App\Models\GameTemplate::where('is_active', true)->get() as $template)
+                                <option value="{{ $template->id }}">{{ $template->name }} - {{ $template->description }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <div style="background: #f0f7ff; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea; margin: 20px 0;">
+                        <p style="margin: 0; color: #334155;">
+                            <strong>📝 Cara Pakai:</strong><br>
+                            1. Pilih template di atas<br>
+                            2. Simpan game ini dulu<br>
+                            3. Klik tombol "Edit" pada game yang baru dibuat<br>
+                            4. Tambahkan soal-soal melalui form yang tersedia
+                        </p>
+                    </div>
+                </div>
+
+                <div id="custom-section" style="display: none;">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">🎨 Custom Game Template</h3>
+                    <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                        Masukkan kode HTML lengkap dengan CSS dan JavaScript untuk custom game template.
+                    </p>
 
                 <div class="form-group">
                     <label for="custom_template">Complete HTML/CSS/JS Code</label>
@@ -106,6 +181,8 @@
                         <code>&lt;img src="/images/game_assets/GAME_ID/namafile.jpg"&gt;</code>
                     </small>
                 </div>
+                </div>
+                </div>
 
                 <hr style="margin: 30px 0; border: none; border-top: 2px solid #e0e0e0;">
 
@@ -117,8 +194,10 @@
 
                 <div class="form-group">
                     <div class="checkbox-group">
-                        <input type="checkbox" id="is_active" name="is_active" value="1" checked>
-                        <label for="is_active" style="margin: 0;">Aktifkan game ini</label>
+                        <label>
+                            <input type="checkbox" name="is_active" value="1" checked>
+                            <span>Game Aktif (Tampil di halaman game)</span>
+                        </label>
                     </div>
                 </div>
 
@@ -129,5 +208,25 @@
             </form>
         </div>
     </div>
+
+    <script>
+        function toggleGameMode() {
+            const mode = document.querySelector('input[name="game_mode"]:checked').value;
+            const templateSection = document.getElementById('template-section');
+            const customSection = document.getElementById('custom-section');
+            
+            if (mode === 'template') {
+                templateSection.style.display = 'block';
+                customSection.style.display = 'none';
+                document.getElementById('template_id').required = true;
+                document.getElementById('custom_template').required = false;
+            } else {
+                templateSection.style.display = 'none';
+                customSection.style.display = 'block';
+                document.getElementById('template_id').required = false;
+                document.getElementById('custom_template').required = false;
+            }
+        }
+    </script>
 </body>
 </html>

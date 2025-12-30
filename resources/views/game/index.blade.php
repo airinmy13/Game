@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Permainan - World Languages Games</title>
+    <title>Daftar Permainan - Platform Game Edukasi</title>
     <style>
         body {
             margin: 0;
@@ -213,7 +213,7 @@
     </div>
 
     <footer>
-        <p>&copy; 2026 World Languages Games. Belajar bahasa jadi menyenangkan!</p>
+        <p>&copy; 2026 Platform Game Edukasi. Belajar jadi menyenangkan!</p>
     </footer>
 
 </body>

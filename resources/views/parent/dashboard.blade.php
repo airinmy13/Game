@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Orang Tua - World Languages Games</title>
+    <title>Dashboard Orang Tua - Platform Game Edukasi</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -226,6 +226,55 @@
                 <div class="number">{{ $overallAccuracy }}%</div>
             </div>
         </div>
+
+        {{-- SECTION 1: JADWAL LES ANAK --}}
+        <h2 style="margin-bottom: 20px; color: #333;">📅 Jadwal Les Anak</h2>
+        
+        <div class="children-section">
+            @forelse($students as $student)
+                <div class="child-card">
+                    <div class="child-header">
+                        <h3>{{ $student->nama_anak }} - Kelas {{ $student->kelas }}</h3>
+                    </div>
+
+                    @if(isset($allSchedules[$student->id]) && $allSchedules[$student->id]->count() > 0)
+                        <table class="sessions-table">
+                            <thead>
+                                <tr>
+                                    <th>Hari</th>
+                                    <th>Waktu</th>
+                                    <th>Mata Pelajaran</th>
+                                    <th>Guru</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($allSchedules[$student->id] as $schedule)
+                                <tr>
+                                    <td>{{ \Carbon\Carbon::parse($schedule->schedule_date)->format('l, d M Y') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</td>
+                                    <td><strong>{{ $schedule->subject }}</strong></td>
+                                    <td>{{ $schedule->mentor_name }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @else
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📅</div>
+                            <p>Belum ada jadwal les</p>
+                        </div>
+                    @endif
+                </div>
+            @empty
+                <div class="empty-state">
+                    <div class="empty-state-icon">👶</div>
+                    <p>Belum ada data anak</p>
+                </div>
+            @endforelse
+        </div>
+
+        {{-- SECTION 2: PROGRESS BELAJAR --}}
+        <h2 style="margin-bottom: 20px; color: #333; margin-top: 40px;">📊 Progress Belajar Anak</h2>
 
         <h2 style="margin-bottom: 20px; color: #333;">👶 Progress Per Anak</h2>
 

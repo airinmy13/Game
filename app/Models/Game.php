@@ -13,12 +13,17 @@ class Game extends Model
         'title',
         'slug',
         'description',
+        'subject',
+        'grade_level',
+        'created_by_teacher_id',
         'thumbnail',
         'html_template',
         'css_style',
         'js_code',
         'custom_template',
         'game_images',
+        'template_id',
+        'use_template',
         'category',
         'is_active',
         'order'
@@ -45,10 +50,34 @@ class Game extends Model
     }
 
     /**
+     * Relasi ke game template
+     */
+    public function template()
+    {
+        return $this->belongsTo(GameTemplate::class, 'template_id');
+    }
+
+    /**
+     * Relasi ke game questions (template-based)
+     */
+    public function gameQuestions()
+    {
+        return $this->hasMany(GameQuestion::class)->orderBy('order');
+    }
+
+    /**
      * Get active questions only
      */
     public function activeQuestions()
     {
         return $this->hasMany(Question::class)->where('is_active', true);
+    }
+
+    /**
+     * Relasi ke teacher yang membuat game
+     */
+    public function createdByTeacher()
+    {
+        return $this->belongsTo(Teacher::class, 'created_by_teacher_id');
     }
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Semua Game - World Languages Games</title>
+    <title>Semua Game - Platform Game Edukasi</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -165,7 +165,7 @@
 </head>
 <body>
     <div class="navbar">
-        <div class="navbar-brand">🌊 World Languages Games</div>
+        <div class="navbar-brand">🌊 Platform Game Edukasi</div>
         <div class="navbar-user">
             <a href="{{ route('home') }}" class="btn btn-back">← Kembali</a>
             @if(session('student_name'))
@@ -258,6 +258,8 @@
             </div>
         </div>
     </div>
+
+    @include('components.footer')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>

@@ -172,6 +172,7 @@
         <h2 style="margin-bottom: 20px; color: #333;">⚙️ Menu Utama</h2>
         
         <div class="menu-grid">
+            <?php if(session('admin_role') === 'super_admin'): ?>
             <div class="menu-card">
                 <div class="icon">🎯</div>
                 <h2>Kelola Game</h2>
@@ -185,6 +186,7 @@
                 <p>Lihat semua game untuk mengelola soal-soalnya</p>
                 <a href="<?php echo e(route('admin.games')); ?>" class="btn btn-primary">Lihat Game</a>
             </div>
+            <?php endif; ?>
 
             <div class="menu-card">
                 <div class="icon">👨‍👩‍👧‍👦</div>
@@ -198,6 +200,13 @@
                 <h2>Kelola Anak</h2>
                 <p>Tambah, edit, atau hapus data anak</p>
                 <a href="<?php echo e(route('admin.students')); ?>" class="btn btn-primary">Kelola Anak</a>
+            </div>
+
+            <div class="menu-card">
+                <div class="icon">📅</div>
+                <h2>Kelola Jadwal</h2>
+                <p>Atur jadwal les siswa dengan guru</p>
+                <a href="<?php echo e(route('admin.schedules.index')); ?>" class="btn btn-primary">Kelola Jadwal</a>
             </div>
             
             <div class="menu-card">

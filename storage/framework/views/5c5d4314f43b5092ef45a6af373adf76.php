@@ -25,6 +25,11 @@
         .checkbox-group { display: flex; align-items: center; gap: 10px; }
         .checkbox-group input[type="checkbox"] { width: auto; }
         .game-info { background: #f0f4ff; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .option-group { background: #f9fafb; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+        .option-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .option-row input[type="radio"] { width: auto; }
+        .option-row input[type="text"] { flex: 1; }
+        .option-label { font-weight: bold; color: #667eea; min-width: 30px; }
     </style>
 </head>
 <body>
@@ -40,10 +45,14 @@
         <div class="game-info">
             <strong>Game:</strong> <?php echo e($game->title); ?>
 
+            <?php if($game->template): ?>
+                <br><strong>Template:</strong> <?php echo e($game->template->name); ?>
+
+            <?php endif; ?>
         </div>
 
         <div class="card">
-            <form action="<?php echo e(route('admin.questions.store')); ?>" method="POST" enctype="multipart/form-data">
+            <form action="<?php echo e(route('admin.questions.store')); ?>" method="POST" enctype="multipart/form-data" id="questionForm">
                 <?php echo csrf_field(); ?>
                 <input type="hidden" name="game_id" value="<?php echo e($game->id); ?>">
                 
@@ -59,10 +68,42 @@
                     <img id="imagePreview" style="max-width: 300px; margin-top: 10px; display: none; border-radius: 10px;">
                 </div>
 
+                
+                <?php if($game->template && str_contains(strtolower($game->template->name), 'multiple choice')): ?>
+                <div id="multipleChoiceSection">
+                    <h4 style="color: #667eea; margin-bottom: 15px;">📝 Pilihan Jawaban</h4>
+                    <div class="option-group">
+                        <div class="option-row">
+                            <input type="radio" name="correct_option" value="A" id="correctA" required>
+                            <span class="option-label">A:</span>
+                            <input type="text" name="option_a" id="option_a" placeholder="Pilihan A" required>
+                        </div>
+                        <div class="option-row">
+                            <input type="radio" name="correct_option" value="B" id="correctB">
+                            <span class="option-label">B:</span>
+                            <input type="text" name="option_b" id="option_b" placeholder="Pilihan B" required>
+                        </div>
+                        <div class="option-row">
+                            <input type="radio" name="correct_option" value="C" id="correctC">
+                            <span class="option-label">C:</span>
+                            <input type="text" name="option_c" id="option_c" placeholder="Pilihan C" required>
+                        </div>
+                        <div class="option-row">
+                            <input type="radio" name="correct_option" value="D" id="correctD">
+                            <span class="option-label">D:</span>
+                            <input type="text" name="option_d" id="option_d" placeholder="Pilihan D" required>
+                        </div>
+                    </div>
+                    <small style="color: #666;">✓ Pilih radio button di sebelah kiri untuk menandai jawaban yang benar</small>
+                </div>
+                <?php else: ?>
+                
                 <div class="form-group">
                     <label for="correct_answer">Jawaban yang Benar *</label>
                     <input type="text" id="correct_answer" name="correct_answer" required placeholder="Jawaban yang benar">
+                    <small style="color: #666; display: block; margin-top: 5px;">Contoh: Untuk pertanyaan "Ibukota Indonesia adalah _____", jawaban: Jakarta</small>
                 </div>
+                <?php endif; ?>
 
                 <div class="form-group">
                     <label for="points">Poin</label>
@@ -83,10 +124,6 @@
                         <input type="checkbox" id="is_active" name="is_active" value="1" checked>
                         <label for="is_active" style="margin: 0;">Aktifkan soal ini</label>
                     </div>
-                </div>
-
-                <div style="background: #fef3c7; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                    <strong>💡 Tips:</strong> Untuk data tambahan (seperti gambar untuk tebak gambar atau grid untuk TTS), Anda bisa menambahkannya setelah soal dibuat atau langsung edit di database untuk saat ini.
                 </div>
 
                 <div class="form-actions">
@@ -113,6 +150,41 @@
                 preview.style.display = 'none';
             }
         }
+
+        // Handle form submission for Multiple Choice
+        document.getElementById('questionForm').addEventListener('submit', function(e) {
+            const multipleChoiceSection = document.getElementById('multipleChoiceSection');
+            
+            if (multipleChoiceSection) {
+                e.preventDefault();
+                
+                // Get selected correct answer
+                const correctOption = document.querySelector('input[name="correct_option"]:checked');
+                if (!correctOption) {
+                    alert('Pilih jawaban yang benar dengan mencentang radio button!');
+                    return;
+                }
+                
+                // Build JSON for correct_answer
+                const options = {
+                    A: document.getElementById('option_a').value,
+                    B: document.getElementById('option_b').value,
+                    C: document.getElementById('option_c').value,
+                    D: document.getElementById('option_d').value,
+                    correct: correctOption.value
+                };
+                
+                // Create hidden input for correct_answer
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'correct_answer';
+                hiddenInput.value = JSON.stringify(options);
+                this.appendChild(hiddenInput);
+                
+                // Submit form
+                this.submit();
+            }
+        });
     </script>
 </body>
 </html>

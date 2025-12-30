@@ -521,8 +521,8 @@
     <div class="logo-container">
       <div class="logo">🌏</div>
       <div>
-        <div class="logo-text">World Languages Games⭐</div>
-        <div class="subtitle">Belajar Bahasa Sambil Bermain</div>
+        <div class="logo-text">Platform Game Edukasi⭐</div>
+        <div class="subtitle">Belajar Sambil Bermain</div>
       </div>
     </div>
 
@@ -540,8 +540,8 @@
   <main>
     <section class="hero" id="home">
       <div class="hero-content">
-        <h1>Belajar Bahasa <br>Sambil Bermain Dengan Permainan Yang Seru!</h1>
-        <p>Ayo bermain, Belajar dan menjelajahi Bahasa bersama!</p>
+        <h1>Belajar <br>Sambil Bermain Dengan Permainan Yang Seru!</h1>
+        <p>Ayo bermain, belajar, dan menjelajahi dunia pengetahuan bersama!</p>
         <button class="btn-primary" onclick="location.href = '#games'">Mulai Bermain Sekarang</button>
       </div>
 
@@ -552,7 +552,7 @@
 
     <section class="games-section" id="games">
       <h2>Pilih Permainan Yang Kamu Inginkan! 🌟</h2>
-      <p>Belajar bahasa sambil bermain yuk🎮</p>
+      <p>Belajar sambil bermain yuk🎮</p>
 
       <div class="games-grid">
         <div class="game-card">
@@ -624,8 +624,8 @@
         </div>
 
         <div class="parents-text">
-          <h2>Untuk Orang Tua: Belajar Bahasa Jadi Mudah & Menyenangkan!</h2>
-          <p>Kami paham kekhawatiran orang tua soal pendidikan anak. Dengan World Languages Games, anak belajar bahasa dengan menyenangkan. Berikut beberapa manfaatnya:</p>
+          <h2>Untuk Orang Tua: Belajar Jadi Mudah & Menyenangkan!</h2>
+          <p>Kami paham kekhawatiran orang tua soal pendidikan anak. Dengan Platform Game Edukasi, anak belajar berbagai mata pelajaran dengan menyenangkan. Berikut beberapa manfaatnya:</p>
 
           <ul class="parents-list">
             <li><strong>Aman & Terawasi</strong> Aman untuk anak, anak-anak dapat belajar dengan baik</li>
@@ -736,12 +736,13 @@
     </div>
   </form>
 </div>
-            
+            </div>
+    </div>
+  </div>
 
-  <footer style="background: #1e3a8a; color: white; text-align: center; padding: 12px 0; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 1;">
-    <p>© 2025 World Languages Games • by <span style="color: #FFD700; font-weight: bold;">Sedjati Flora Game ⭐</span></p>
-  </footer>
+  @include('components.footer')
 
+  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     function showLoginModal() {
@@ -768,6 +769,17 @@
       } else {
         header.classList.remove('scrolled');
       }
+    });
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
     });
   </script>
 </body>

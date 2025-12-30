@@ -1,0 +1,9 @@
+// Temporary debug route - add this to routes/web.php for testing
+Route::get('/debug-session', function() {
+    return [
+        'admin_id' => session('admin_id'),
+        'admin_name' => session('admin_name'),
+        'admin_role' => session('admin_role'),
+        'all_session' => session()->all()
+    ];
+});

@@ -13,7 +13,7 @@ class CheckAdminLogin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!session('admin_logged_in')) {
+        if (!session('admin_id')) {
             return redirect()->route('admin.login')->with('error', 'Silakan login terlebih dahulu');
         }
 

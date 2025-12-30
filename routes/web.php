@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\GameController;
 use App\Http\Middleware\CheckStudentLogin;
 use App\Http\Middleware\CheckAdminLogin;
@@ -13,6 +15,47 @@ use App\Http\Middleware\CheckParentLogin;
 Route::get('/', function () {
     return view('home');
 })->name('home');
+
+// DEBUG ROUTE - Remove after testing
+Route::get('/debug-session', function() {
+    return [
+        'admin_id' => session('admin_id'),
+        'admin_name' => session('admin_name'),
+        'admin_role' => session('admin_role'),
+        'teacher_id' => session('teacher_id'),
+        'all_session' => session()->all()
+    ];
+});
+
+// ==================== PUBLIC ROUTES ====================
+// Teacher Registration (Public)
+Route::get('/teacher/register', [\App\Http\Controllers\TeacherRegistrationController::class, 'showForm'])->name('teacher.register.form');
+Route::post('/teacher/register', [\App\Http\Controllers\TeacherRegistrationController::class, 'register'])->name('teacher.register.submit');
+Route::get('/teacher/register/success', [\App\Http\Controllers\TeacherRegistrationController::class, 'success'])->name('teacher.register.success');
+
+// ==================== SUPER ADMIN ROUTES ====================
+Route::middleware(['web'])->group(function () {
+    Route::prefix('super-admin')->middleware(['super_admin'])->group(function () {
+        Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('super-admin.dashboard');
+        
+        // Teacher Management
+        Route::resource('teachers', \App\Http\Controllers\TeacherManagementController::class, [
+            'as' => 'super-admin'
+        ]);
+        
+        // Teacher Approval
+        Route::post('/teachers/{id}/approve', [\App\Http\Controllers\TeacherManagementController::class, 'approve'])->name('super-admin.teachers.approve');
+        Route::post('/teachers/{id}/reject', [\App\Http\Controllers\TeacherManagementController::class, 'reject'])->name('super-admin.teachers.reject');
+    });
+
+    // ==================== TEACHER ROUTES ====================
+    Route::prefix('teacher')->middleware(['teacher'])->group(function () {
+        Route::get('/dashboard', [TeacherController::class, 'dashboard'])->name('teacher.dashboard');
+        
+        // Teacher can only manage games and questions
+        // Use same routes as admin but with teacher prefix
+    });
+});
 
 // ==================== ADMIN ROUTES ====================
 Route::prefix('admin')->group(function () {
@@ -34,10 +77,15 @@ Route::prefix('admin')->group(function () {
         // Questions management
         Route::get('/games/{gameId}/questions', [AdminController::class, 'questions'])->name('admin.questions');
         Route::get('/games/{gameId}/questions/create', [AdminController::class, 'createQuestion'])->name('admin.questions.create');
-        Route::post('/questions', [AdminController::class, 'storeQuestion'])->name('admin.questions.store');
+        Route::post('/games/{gameId}/questions', [AdminController::class, 'storeQuestion'])->name('admin.questions.store');
         Route::get('/questions/{id}/edit', [AdminController::class, 'editQuestion'])->name('admin.questions.edit');
         Route::put('/questions/{id}', [AdminController::class, 'updateQuestion'])->name('admin.questions.update');
         Route::delete('/questions/{id}', [AdminController::class, 'deleteQuestion'])->name('admin.questions.delete');
+        
+        // Schedule management
+        Route::resource('schedules', \App\Http\Controllers\ScheduleController::class, [
+            'as' => 'admin'
+        ]);
         
         // Parents management
         Route::get('/parents', [AdminController::class, 'parents'])->name('admin.parents');
